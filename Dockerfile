@@ -15,11 +15,8 @@ RUN npm run build
 FROM nginx:alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 
 EXPOSE 80
 
-# Substituir porta 80 pela porta do Railway
-RUN sed -i 's/listen 80;/listen ${PORT:-80};/' /etc/nginx/conf.d/default.conf
-
-CMD ["sh", "-c", "nginx -g 'daemon off;'"]
+CMD ["sh", "-c", "envsubst '$PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
