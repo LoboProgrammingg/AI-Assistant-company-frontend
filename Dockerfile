@@ -19,4 +19,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+# Substituir porta 80 pela porta do Railway
+RUN sed -i 's/listen 80;/listen ${PORT:-80};/' /etc/nginx/conf.d/default.conf
+
+CMD ["sh", "-c", "nginx -g 'daemon off;'"]
