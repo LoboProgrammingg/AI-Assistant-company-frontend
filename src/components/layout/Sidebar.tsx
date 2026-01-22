@@ -69,18 +69,18 @@ export function Sidebar() {
           {/* Logo */}
           <div className={cn(
             "flex items-center border-b border-sidebar-border transition-all duration-300",
-            sidebarCollapsed ? "justify-center px-3 py-4" : "gap-3 px-5 py-4"
+            sidebarCollapsed ? "justify-center px-3 py-5" : "gap-3 px-5 py-5"
           )}>
             <img 
               src="/images/iris-logo.png" 
               alt="IRIS Logo" 
               className={cn(
                 "object-contain transition-all duration-300",
-                sidebarCollapsed ? "w-9 h-9" : "w-10 h-10"
+                sidebarCollapsed ? "w-10 h-10" : "w-14 h-14"
               )}
             />
             {!sidebarCollapsed && (
-              <span className="font-bold text-lg text-sidebar-foreground whitespace-nowrap">IRIS</span>
+              <span className="font-bold text-xl text-sidebar-foreground whitespace-nowrap">IRIS</span>
             )}
           </div>
 

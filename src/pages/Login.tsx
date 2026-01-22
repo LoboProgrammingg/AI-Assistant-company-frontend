@@ -52,14 +52,14 @@ export function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4">
+          <div className="mx-auto mb-6">
             <img 
               src="/images/iris-logo.png" 
               alt="IRIS Logo" 
-              className="w-20 h-20 object-contain mx-auto"
+              className="w-32 h-32 object-contain mx-auto"
             />
           </div>
-          <CardTitle className="text-2xl font-bold">IRIS</CardTitle>
+          <CardTitle className="text-3xl font-bold">IRIS</CardTitle>
           <CardDescription>
             Entre com seu email e senha para acessar o dashboard
           </CardDescription>
