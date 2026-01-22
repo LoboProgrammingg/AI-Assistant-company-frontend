@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate, Link, useLocation } from "react-router-dom"
-import { MessageSquare, Mail, Lock, Eye, EyeOff } from "lucide-react"
+import { Mail, Lock, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
@@ -52,10 +52,14 @@ export function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mb-4">
-            <MessageSquare className="w-8 h-8 text-primary-foreground" />
+          <div className="mx-auto mb-4">
+            <img 
+              src="/images/iris-logo.png" 
+              alt="IRIS Logo" 
+              className="w-20 h-20 object-contain mx-auto"
+            />
           </div>
-          <CardTitle className="text-2xl">WhatsApp AI Assistant</CardTitle>
+          <CardTitle className="text-2xl font-bold">IRIS</CardTitle>
           <CardDescription>
             Entre com seu email e senha para acessar o dashboard
           </CardDescription>
