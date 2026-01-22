@@ -92,7 +92,11 @@ export function Dashboard() {
   })
 
   const { setChatOpen } = useUIStore()
-  const balance = (stats?.total_income ?? 0) - (stats?.total_expenses ?? 0)
+  
+  // CORREÇÃO: Usar monthlySummary para valores consistentes com a página Finanças
+  const totalIncome = monthlySummary?.summary?.total_income ?? 0
+  const totalExpenses = monthlySummary?.summary?.total_expenses ?? 0
+  const balance = totalIncome - totalExpenses
   const isPositive = balance >= 0
 
   return (
@@ -147,10 +151,10 @@ export function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-success">
-                {formatCurrency(stats?.total_income ?? 0)}
+                {formatCurrency(totalIncome)}
               </div>
               <p className="text-xs text-muted-foreground mt-1 flex items-center">
-                <span>{stats?.total_transactions ?? 0} transações</span>
+                <span>{monthlySummary?.summary?.transaction_count ?? 0} transações</span>
                 <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
               </p>
             </CardContent>
@@ -165,10 +169,10 @@ export function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-destructive">
-                {formatCurrency(stats?.total_expenses ?? 0)}
+                {formatCurrency(totalExpenses)}
               </div>
               <p className="text-xs text-muted-foreground mt-1 flex items-center">
-                <span>{stats?.total_transactions ?? 0} transações</span>
+                <span>{monthlySummary?.summary?.transaction_count ?? 0} transações</span>
                 <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
               </p>
             </CardContent>

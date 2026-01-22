@@ -9,7 +9,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Trash2,
-  Info,
+  X,
+  Calendar,
+  Tag,
+  FileText,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -48,6 +51,7 @@ export function Finances() {
   const queryClient = useQueryClient()
   const [period, setPeriod] = useState<Period>("month")
   const [page, setPage] = useState(1)
+  const [selectedTransaction, setSelectedTransaction] = useState<Finance | null>(null)
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => financesApi.delete(id),
@@ -348,7 +352,8 @@ export function Finances() {
             {transactions?.items?.map((transaction) => (
               <div
                 key={transaction.id}
-                className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted/70 transition-colors group"
+                className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted/70 transition-colors group cursor-pointer"
+                onClick={() => setSelectedTransaction(transaction)}
               >
                 <div className="flex items-center gap-4 flex-1 min-w-0">
                   <div
@@ -367,14 +372,6 @@ export function Finances() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="font-medium truncate">{transaction.description}</p>
-                      {(transaction as any).short_description && (
-                        <span 
-                          className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0"
-                          title={(transaction as any).short_description}
-                        >
-                          {(transaction as any).short_description}
-                        </span>
-                      )}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
                       <span className="truncate">{transaction.category?.name || "Sem categoria"}</span>
@@ -399,7 +396,8 @@ export function Finances() {
                     size="icon"
                     className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
                     disabled={deleteMutation.isPending}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation()
                       if (confirm(`Deletar "${transaction.description}"?`)) {
                         deleteMutation.mutate(transaction.id)
                       }
@@ -429,6 +427,127 @@ export function Finances() {
           )}
         </CardContent>
       </Card>
+
+      {/* Modal de Detalhes da Transação */}
+      {selectedTransaction && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedTransaction(null)}
+        >
+          <div 
+            className="bg-background rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`p-3 rounded-full ${
+                    selectedTransaction.type === "income"
+                      ? "bg-success/10 text-success"
+                      : "bg-destructive/10 text-destructive"
+                  }`}
+                >
+                  {selectedTransaction.type === "income" ? (
+                    <TrendingUp className="h-6 w-6" />
+                  ) : (
+                    <TrendingDown className="h-6 w-6" />
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold">
+                    {selectedTransaction.type === "income" ? "Receita" : "Despesa"}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Detalhes da transação
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSelectedTransaction(null)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-6">
+              {/* Valor */}
+              <div className="text-center py-4">
+                <span
+                  className={`text-4xl font-bold ${
+                    selectedTransaction.type === "income" ? "text-success" : "text-destructive"
+                  }`}
+                >
+                  {selectedTransaction.type === "income" ? "+" : "-"}
+                  {formatCurrency(selectedTransaction.amount)}
+                </span>
+              </div>
+
+              {/* Descrição */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <FileText className="h-4 w-4" />
+                  <span>Descrição</span>
+                </div>
+                <p className="text-base bg-muted/50 rounded-xl p-4">
+                  {selectedTransaction.description || "Sem descrição"}
+                </p>
+              </div>
+
+              {/* Categoria */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Tag className="h-4 w-4" />
+                  <span>Categoria</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium">
+                    {selectedTransaction.category?.name || "Sem categoria"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Data */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span>Data</span>
+                </div>
+                <p className="text-base">
+                  {formatDate(selectedTransaction.transaction_date, "long")}
+                </p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setSelectedTransaction(null)}
+              >
+                Fechar
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={() => {
+                  if (confirm(`Deletar "${selectedTransaction.description}"?`)) {
+                    deleteMutation.mutate(selectedTransaction.id)
+                    setSelectedTransaction(null)
+                  }
+                }}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Excluir
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

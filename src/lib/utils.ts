@@ -18,6 +18,9 @@ export function formatCurrency(value: number): string {
  * Converte string de data do backend para Date local
  * O backend envia datas no timezone do usuário sem sufixo Z
  * Então interpretamos como hora local, não UTC
+ * 
+ * IMPORTANTE: Para datas sem hora (yyyy-MM-dd), criamos Date com hora 12:00
+ * para evitar problemas de timezone que fazem a data aparecer 1 dia antes
  */
 function parseLocalDate(dateStr: string): Date {
   let normalized = dateStr.trim()
@@ -25,6 +28,12 @@ function parseLocalDate(dateStr: string): Date {
   // Se já tem Z ou offset, é UTC - parse normal
   if (normalized.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(normalized)) {
     return new Date(normalized)
+  }
+  
+  // CORREÇÃO: Data apenas (yyyy-MM-dd) - adiciona hora 12:00 para evitar shift de timezone
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    const [year, month, day] = normalized.split("-").map(Number)
+    return new Date(year, month - 1, day, 12, 0, 0)
   }
   
   // Substitui espaço por T para formato ISO
@@ -38,7 +47,6 @@ function parseLocalDate(dateStr: string): Date {
   }
   
   // Parse como hora local (sem converter de UTC)
-  // Isso é importante: o backend envia a hora no timezone do usuário
   const parts = normalized.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/)
   if (parts) {
     const [, year, month, day, hour, minute, second] = parts
