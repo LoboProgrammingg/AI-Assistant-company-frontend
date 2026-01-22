@@ -76,7 +76,7 @@ export function Sidebar() {
               alt="IRIS Logo" 
               className={cn(
                 "object-contain transition-all duration-300",
-                sidebarCollapsed ? "w-10 h-10" : "w-14 h-14"
+                sidebarCollapsed ? "w-10 h-10" : "w-20 h-20"
               )}
             />
             {!sidebarCollapsed && (
