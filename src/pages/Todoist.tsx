@@ -40,7 +40,7 @@ import { format, parseISO } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import toast from "react-hot-toast"
 
-type FilterType = "today" | "tomorrow" | "overdue" | "all" | "welcome"
+type FilterType = "today" | "tomorrow" | "overdue" | "all"
 
 const priorityConfig: Record<number, { color: string; bg: string; label: string; icon: string }> = {
   1: { 
@@ -100,8 +100,7 @@ export function Todoist() {
     queryFn: () =>
       todoistApi
         .listTasks({ 
-          filter: filter === "all" || filter === "welcome" ? undefined : filter,
-          include_welcome: filter === "welcome"
+          filter: filter === "all" ? undefined : filter
         })
         .then((r) => r.data),
     enabled: status?.connected,
@@ -186,7 +185,6 @@ export function Todoist() {
     tomorrow: "Amanhã",
     overdue: "Atrasadas",
     all: "Todas",
-    welcome: "Boas-vindas",
   }
 
   // Se não está configurado
@@ -419,7 +417,7 @@ export function Todoist() {
       {/* Filters */}
       <div className="flex flex-wrap gap-4">
         <div className="flex gap-2 p-1 bg-muted rounded-lg">
-          {(["today", "tomorrow", "overdue", "all", "welcome"] as FilterType[]).map((f) => (
+          {(["today", "tomorrow", "overdue", "all"] as FilterType[]).map((f) => (
             <Button
               key={f}
               variant={filter === f ? "default" : "ghost"}
@@ -531,19 +529,9 @@ export function Todoist() {
               ))}
 
               {(!tasks || tasks.length === 0) && (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">
-                    {filter === "welcome" 
-                      ? "Nenhuma tarefa de boas-vindas encontrada"
-                      : "Nenhuma tarefa encontrada"
-                    }
-                  </p>
-                  {filter === "welcome" && (
-                    <p className="text-sm text-muted-foreground mt-2">
-                      As tarefas de boas-vindas são criadas automaticamente pelo Todoist para novos usuários
-                    </p>
-                  )}
-                </div>
+                <p className="text-center text-muted-foreground py-8">
+                  Nenhuma tarefa encontrada
+                </p>
               )}
             </div>
           )}
