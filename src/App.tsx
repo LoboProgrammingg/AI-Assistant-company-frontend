@@ -19,6 +19,7 @@ import {
   Settings,
   Contacts,
   Documents,
+  Todoist,
 } from "@/pages"
 import { useAuthStore } from "@/stores/auth"
 import { initializeTheme } from "@/stores/theme"
@@ -84,6 +85,7 @@ function App() {
             <Route path="meetings/:id" element={<MeetingDetail />} />
             <Route path="contacts" element={<Contacts />} />
             <Route path="documents" element={<Documents />} />
+            <Route path="todoist" element={<Todoist />} />
             <Route path="chat" element={<Chat />} />
             <Route path="settings" element={<Settings />} />
           </Route>

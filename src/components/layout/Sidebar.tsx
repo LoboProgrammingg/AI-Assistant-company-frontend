@@ -12,6 +12,7 @@ import {
   FileText,
   ChevronLeft,
   ChevronRight,
+  CheckSquare,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -25,6 +26,7 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Finanças", href: "/finances", icon: DollarSign },
   { name: "Lembretes", href: "/reminders", icon: Bell },
+  { name: "Todoist", href: "/todoist", icon: CheckSquare },
   { name: "Reuniões", href: "/meetings", icon: Users },
   { name: "Contatos", href: "/contacts", icon: Contact },
   { name: "Documentos", href: "/documents", icon: FileText },
