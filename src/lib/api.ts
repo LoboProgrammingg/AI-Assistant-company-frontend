@@ -148,30 +148,6 @@ export interface ChatMessage {
   entities?: Record<string, unknown>
 }
 
-export interface Contact {
-  id: number
-  user_id: number
-  name: string
-  phone_number: string
-  group_name: string
-  notes: string | null
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
-
-export interface ContactCreate {
-  name: string
-  phone_number: string
-  group_name?: string
-  notes?: string
-}
-
-export interface ContactGroupSummary {
-  group_name: string
-  count: number
-}
-
 export interface AuthUser {
   id: number
   name: string | null
@@ -341,27 +317,131 @@ export const chatApi = {
   },
 }
 
-export const contactsApi = {
-  list: (params?: { group?: string; search?: string; page?: number; limit?: number }) =>
-    api.get<PaginatedResponse<Contact>>("/contacts/", { params }),
+// ==================== Tarefas ====================
 
-  get: (id: number) => api.get<Contact>(`/contacts/${id}`),
+export interface Task {
+  id: number
+  title: string
+  description: string | null
+  status: "backlog" | "todo" | "in_progress" | "done" | "cancelled"
+  priority: "low" | "medium" | "high" | "urgent"
+  due_date: string | null
+  project_id: number | null
+  parent_id: number | null
+  labels: number[]
+  remind_before_minutes: number
+  recurrence_type: string
+  estimated_minutes: number | null
+  actual_minutes: number | null
+  is_active: boolean
+  notified: boolean
+  completed_at: string | null
+  created_at: string
+  updated_at: string
+  subtask_count: number
+  is_overdue: boolean
+}
 
-  create: (data: ContactCreate) => api.post<Contact>("/contacts/", data),
+export interface TaskCreate {
+  title: string
+  description?: string
+  priority?: string
+  status?: string
+  due_date?: string
+  project_id?: number
+  parent_id?: number
+  labels?: number[]
+  remind_before_minutes?: number
+  recurrence_type?: string
+  estimated_minutes?: number
+}
 
-  createBulk: (contacts: ContactCreate[]) =>
-    api.post<Contact[]>("/contacts/bulk", { contacts }),
+export interface TaskUpdate {
+  title?: string
+  description?: string
+  priority?: string
+  status?: string
+  due_date?: string
+  project_id?: number
+  labels?: number[]
+  remind_before_minutes?: number
+  estimated_minutes?: number
+}
 
-  update: (id: number, data: Partial<ContactCreate>) =>
-    api.put<Contact>(`/contacts/${id}`, data),
+export interface TaskSummary {
+  total: number
+  by_status: Record<string, number>
+  by_priority: Record<string, number>
+  overdue: number
+  due_today: number
+}
 
-  delete: (id: number) => api.delete(`/contacts/${id}`),
+export interface KanbanBoard {
+  backlog: Task[]
+  todo: Task[]
+  in_progress: Task[]
+  done: Task[]
+}
 
-  getByGroup: (groupName: string) =>
-    api.get<{ group_name: string; count: number; contacts: Contact[] }>(`/contacts/group/${groupName}`),
+export interface Project {
+  id: number
+  name: string
+  description: string | null
+  color: string
+  icon: string | null
+  is_active: boolean
+  is_favorite: boolean
+  created_at: string
+}
 
-  getGroupsSummary: () =>
-    api.get<ContactGroupSummary[]>("/contacts/groups"),
+export interface TaskLabel {
+  id: number
+  name: string
+  color: string
+  created_at: string
+}
+
+export const tasksApi = {
+  list: (params?: { status?: string; priority?: string; project_id?: number; limit?: number }) =>
+    api.get<Task[]>("/tasks/", { params }),
+
+  get: (id: number) => api.get<Task>(`/tasks/${id}`),
+
+  create: (data: TaskCreate) => api.post<Task>("/tasks/", data),
+
+  update: (id: number, data: TaskUpdate) => api.put<Task>(`/tasks/${id}`, data),
+
+  delete: (id: number) => api.delete(`/tasks/${id}`),
+
+  complete: (id: number) => api.post<Task>(`/tasks/${id}/complete`),
+
+  getKanban: (project_id?: number) =>
+    api.get<KanbanBoard>("/tasks/kanban", { params: { project_id } }),
+
+  getSummary: () => api.get<TaskSummary>("/tasks/summary"),
+
+  getOverdue: () => api.get<Task[]>("/tasks/overdue"),
+
+  getUpcoming: (hours?: number) =>
+    api.get<Task[]>("/tasks/upcoming", { params: { hours } }),
+
+  getSubtasks: (id: number) => api.get<Task[]>(`/tasks/${id}/subtasks`),
+
+  // Projects
+  listProjects: () => api.get<Project[]>("/tasks/projects/"),
+
+  createProject: (data: { name: string; description?: string; color?: string }) =>
+    api.post<Project>("/tasks/projects/", data),
+
+  deleteProject: (id: number) => api.delete(`/tasks/projects/${id}`),
+
+  // Labels
+  listLabels: () => api.get<TaskLabel[]>("/tasks/labels/"),
+
+  createLabel: (data: { name: string; color?: string }) =>
+    api.post<TaskLabel>("/tasks/labels/", data),
+
+  deleteLabel: (id: number) => api.delete(`/tasks/labels/${id}`),
 }
 
 export interface Document {
@@ -400,112 +480,6 @@ export interface DocumentStats {
   ai_limit: number
   by_category: Record<string, number>
   total_size_bytes: number
-}
-
-// ==================== Todoist ====================
-
-export interface TodoistTask {
-  id: string
-  content: string
-  description: string | null
-  due: {
-    date: string
-    datetime?: string
-    string?: string
-    timezone?: string
-  } | null
-  priority: number
-  project_id: string | null
-  labels: string[]
-  is_completed: boolean
-  created_at: string
-  url: string
-}
-
-export interface TodoistProject {
-  id: string
-  name: string
-  color: string
-  is_favorite: boolean
-  url: string
-}
-
-export interface TodoistLabel {
-  id: string
-  name: string
-  color: string
-}
-
-export interface TodoistAlert {
-  task_id: string
-  task_title: string
-  due_datetime: string
-  minutes_remaining: number
-  message: string
-  priority: number
-}
-
-export interface TodoistStatus {
-  configured: boolean
-  connected: boolean
-  message: string
-}
-
-export interface TodoistSummary {
-  today_count: number
-  overdue_count: number
-  alerts_count: number
-  priority_breakdown: Record<number, number>
-  today_tasks: TodoistTask[]
-  overdue_tasks: TodoistTask[]
-  alerts: TodoistAlert[]
-}
-
-export interface TodoistTaskCreate {
-  content: string
-  description?: string
-  due_string?: string
-  due_datetime?: string
-  priority?: number
-  project_id?: string
-  labels?: string[]
-}
-
-export interface TodoistTaskUpdate {
-  content?: string
-  description?: string
-  due_string?: string
-  priority?: number
-}
-
-export const todoistApi = {
-  getStatus: () => api.get<TodoistStatus>("/todoist/status"),
-
-  listTasks: (params?: { filter?: string; project_id?: string; include_welcome?: boolean }) =>
-    api.get<TodoistTask[]>("/todoist/tasks", { params }),
-
-  getTask: (id: string) => api.get<TodoistTask>(`/todoist/tasks/${id}`),
-
-  createTask: (data: TodoistTaskCreate) =>
-    api.post<TodoistTask>("/todoist/tasks", data),
-
-  updateTask: (id: string, data: TodoistTaskUpdate) =>
-    api.put<{ success: boolean; message: string }>(`/todoist/tasks/${id}`, data),
-
-  completeTask: (id: string) =>
-    api.post<{ success: boolean; message: string }>(`/todoist/tasks/${id}/complete`),
-
-  deleteTask: (id: string) =>
-    api.delete<{ success: boolean; message: string }>(`/todoist/tasks/${id}`),
-
-  getAlerts: () => api.get<TodoistAlert[]>("/todoist/alerts"),
-
-  getProjects: (include_welcome?: boolean) => 
-    api.get<TodoistProject[]>("/todoist/projects", { params: { include_welcome } }),
-
-  getLabels: () => api.get<TodoistLabel[]>("/todoist/labels"),
-
-  getTodaySummary: () => api.get<TodoistSummary>("/todoist/tasks/today/summary"),
 }
 
 // ==================== Integrações (Google Calendar, etc) ====================
