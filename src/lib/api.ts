@@ -101,6 +101,8 @@ export interface FinanceSummary {
   }>
 }
 
+export type MeetingStatus = "not_recorded" | "recording" | "uploading" | "processing" | "ready" | "failed"
+
 export interface Meeting {
   id: number
   user_id: number
@@ -128,6 +130,60 @@ export interface Meeting {
   key_topics_count?: number
   action_items_count?: number
   participants_count?: number
+  // Novos campos v2
+  google_event_id?: string
+  meet_url?: string
+  start_time?: string
+  end_time?: string
+  record_enabled?: boolean
+  status?: MeetingStatus
+  has_transcript?: boolean
+  short_summary?: string
+  error_message?: string
+}
+
+export interface MeetingSession {
+  id: number
+  meeting_id: number
+  source_type: "realtime" | "manual_upload"
+  status: "recording" | "uploading" | "processing" | "ready" | "failed"
+  started_at: string
+  ended_at?: string
+  duration_seconds?: number
+  chunks_count: number
+  error_message?: string
+  created_at: string
+}
+
+export interface MeetingArtifact {
+  id: number
+  meeting_id: number
+  transcript_text?: string
+  transcript_language: string
+  executive_summary?: string
+  short_summary?: string
+  topics: Array<{ topic: string; summary?: string }>
+  action_items: Array<{ task: string; owner?: string; due_date?: string; confidence: number }>
+  decisions: Array<{ decision: string; context?: string; made_by?: string }>
+  risks_blockers: string[]
+  participants_detected: string[]
+  transcription_model?: string
+  summarization_model?: string
+  processing_time_seconds?: number
+  created_at: string
+}
+
+export interface MeetingDetail extends Meeting {
+  sessions: MeetingSession[]
+  artifacts: MeetingArtifact[]
+}
+
+export interface SyncGoogleCalendarResponse {
+  synced_count: number
+  created_count: number
+  updated_count: number
+  meetings: Meeting[]
+  message: string
 }
 
 export interface PaginatedResponse<T> {
@@ -265,10 +321,11 @@ export const financesApi = {
 }
 
 export const meetingsApi = {
-  list: (params?: { page?: number; limit?: number }) =>
-    api.get<PaginatedResponse<Meeting>>("/meetings/", { params }),
+  // Legacy endpoints
+  list: (params?: { page?: number; limit?: number; upcoming_only?: boolean; status_filter?: string }) =>
+    api.get<PaginatedResponse<Meeting>>("/meetings", { params }),
   
-  get: (id: number) => api.get<Meeting>(`/meetings/${id}`),
+  get: (id: number) => api.get<MeetingDetail>(`/meetings/${id}`),
   
   create: (data: Partial<Meeting>) => api.post<Meeting>("/meetings/", data),
   
@@ -289,6 +346,57 @@ export const meetingsApi = {
     api.patch<Meeting>(`/meetings/${meetingId}/action-items/${itemIndex}`, null, {
       params: { status },
     }),
+
+  // V2 Recording/Transcription endpoints
+  syncGoogleCalendar: (daysAhead = 30) =>
+    api.post<SyncGoogleCalendarResponse>("/meetings/sync-google-calendar", null, {
+      params: { days_ahead: daysAhead },
+    }),
+
+  enableRecording: (meetingId: number, enabled = true) =>
+    api.post<{ meeting_id: number; record_enabled: boolean; message: string }>(
+      `/meetings/${meetingId}/enable-recording`,
+      { enabled }
+    ),
+
+  startSession: (meetingId: number) =>
+    api.post<{ session_id: number; meeting_id: number; status: string; upload_endpoint: string }>(
+      `/meetings/${meetingId}/sessions`
+    ),
+
+  uploadChunk: (meetingId: number, sessionId: number, chunk: Blob, chunkIndex: number, startMs?: number, endMs?: number) => {
+    const formData = new FormData()
+    formData.append("file", chunk, `chunk_${chunkIndex}.webm`)
+    return api.post<{ chunk_id: number; chunk_index: number; received: boolean }>(
+      `/meetings/${meetingId}/sessions/${sessionId}/chunks`,
+      formData,
+      {
+        params: { chunk_index: chunkIndex, start_ms: startMs, end_ms: endMs },
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    )
+  },
+
+  stopSession: (meetingId: number, sessionId: number) =>
+    api.post<{ session_id: number; status: string; message: string }>(
+      `/meetings/${meetingId}/sessions/${sessionId}/stop`
+    ),
+
+  uploadRecording: (meetingId: number, file: File) => {
+    const formData = new FormData()
+    formData.append("file", file)
+    return api.post<{ session_id: number; meeting_id: number; file_size_bytes: number; status: string }>(
+      `/meetings/${meetingId}/upload`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    )
+  },
+
+  reprocess: (meetingId: number, transcribe = true, summarize = true) =>
+    api.post<{ meeting_id: number; session_id: number; message: string }>(
+      `/meetings/${meetingId}/reprocess`,
+      { transcribe, summarize }
+    ),
 }
 
 export const chatApi = {
